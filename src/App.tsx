@@ -1,36 +1,36 @@
-import { useEffect } from "react";
+import { useEffect } from 'react'
 import {
-  useSignal,
-  initData,
-  miniApp,
-  mainButton,
-  hapticFeedback,
-} from "@tma.js/sdk-react";
+	useSignal,
+	initData,
+	miniApp,
+	mainButton,
+	hapticFeedback
+} from '@tma.js/sdk-react'
 
 export default function App() {
-  const user = useSignal(initData.user); // { id, first_name, username, ... }
-  const isDark = useSignal(miniApp.isDark);
+	const user = useSignal(initData.user)
+	const isDark = useSignal(miniApp.isDark)
 
-  // Главная кнопка
-  useEffect(() => {
-    mainButton.setParams.ifAvailable({
-      text: "Оформить заказ",
-      isVisible: true,
-      isEnabled: true,
-    });
-    const off = mainButton.onClick(() => {
-      hapticFeedback.impactOccurred.ifAvailable("medium");
-      // ...
-    });
-    return () => {
-      off();
-      mainButton.setParams.ifAvailable({ isVisible: false });
-    };
-  }, []);
+	// Главная кнопка
+	useEffect(() => {
+		mainButton.setParams.ifAvailable({
+			text: 'Оформить заказ',
+			isVisible: true,
+			isEnabled: true
+		})
+		const off = mainButton.onClick(() => {
+			hapticFeedback.impactOccurred.ifAvailable('medium')
+			// ...
+		})
+		return () => {
+			off()
+			mainButton.setParams.ifAvailable({ isVisible: false })
+		}
+	}, [])
 
-  return (
-    <h1>
-      Привет, {user?.first_name}! Тема: {isDark ? "тёмная" : "светлая"}
-    </h1>
-  );
+	return (
+		<h1>
+			Привет, {user?.first_name}! Тема: {isDark ? 'тёмная' : 'светлая'}
+		</h1>
+	)
 }
