@@ -1,76 +1,171 @@
-# React + TypeScript + Vite
+# Bloomy
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Telegram-бот для пар: помогает планировать свидания, напоминает о них и собирает отзывы с фото. Бот (aiogram) и REST API для Mini App (FastAPI) работают в одном процессе, данные — в PostgreSQL, фото — в S3-совместимом хранилище (SeaweedFS).
 
-Currently, two official plugins are available:
+Устройство кода — в [docs/STRUCTURE.md](docs/STRUCTURE.md).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Функционал
 
-## React Compiler
+### Пара
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+- `/start` — регистрация пользователя; если задан `BOT_WEBAPP_URL`, показывается кнопка открытия Mini App.
+- `/pair` — выдаёт подписанную ссылку-приглашение `t.me/<bot>?start=pair_...`. Партнёр переходит по ней и становится парой с автором, оба получают уведомление.
+- Если пара уже есть, `/pair` показывает партнёра.
 
-Note: This will impact Vite dev & build performances.
-You can also try [the experimental native React Compiler support in plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md#rust-react-compiler) by using `compiler: true` in the plugin options instead of using the Babel plugin.
+### Свидания
 
-## Expanding the ESLint configuration
+- `/new` — пошаговый диалог: название → дата и время (`12.10 19:00` или `12.10.2026 19:00`, в часовом поясе пользователя, по умолчанию Europe/Moscow) → место (можно пропустить «-»). Время в прошлом не принимается. Без пары создать свидание нельзя.
+- Партнёру приходит приглашение с кнопками «Принять» / «Отказаться», автору — ответ.
+- Если приглашение не дошло (бот у партнёра остановлен), автор может отправить его ещё раз из карточки свидания.
+- `/dates` — список последних 20 свиданий со статусами; по нажатию открывается карточка с деталями, отзывами и действиями.
+- Статусы: предложено → принято / отклонено → состоялось; предложенное или принятое можно отменить.
+- Принятое свидание, которое уже началось, можно отметить состоявшимся вручную. Иначе это происходит автоматически через 8 часов после начала.
+- **Отмена:** любой из участников может отменить предложенное или принятое свидание, пока оно не началось, — кнопка «🚫 Отменить свидание» в карточке. Бот просит написать причину (обязательно, до 500 символов), второму участнику приходит уведомление, кто отменил и почему. Причина видна в карточке отменённого свидания. По отменённым свиданиям напоминания не приходят.
+- `/cancel` — прервать любой диалог.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Напоминания
 
-```js
-export default defineConfig([
-	globalIgnores(['dist']),
-	{
-		files: ['**/*.{ts,tsx}'],
-		extends: [
-			// Other configs...
+Фоновая задача раз в минуту:
 
-			// Remove tseslint.configs.recommended and replace with this
-			tseslint.configs.recommendedTypeChecked,
-			// Alternatively, use this for stricter rules
-			tseslint.configs.strictTypeChecked,
-			// Optionally, add this for stylistic rules
-			tseslint.configs.stylisticTypeChecked
+- шлёт напоминания о принятых свиданиях за 2 дня, за 1 день и за 3 часа. Пропущенные напоминания задним числом не отправляются: если свидание приняли за 20 часов до начала, придёт только «через 3 часа»;
+- отмечает прошедшие свидания состоявшимися и просит обоих оставить отзыв;
+- через сутки после свидания один раз напоминает об отзыве тем, кто его не оставил.
 
-			// Other configs...
-		],
-		languageOptions: {
-			parserOptions: {
-				project: ['./tsconfig.node.json', './tsconfig.app.json'],
-				tsconfigRootDir: import.meta.dirname
-			}
-			// other options...
-		}
-	}
-])
+После простоя бота старые свидания не вызывают пачку запоздалых сообщений.
+
+### Отзывы
+
+- `/review` или кнопка в карточке — отзыв о состоявшемся свидании, один от каждого участника. Оставить отзыв можно и из Mini App (см. API ниже).
+- Шаги: оценка 1–5 ⭐ → что понравилось → что не понравилось → еда и напитки → общие впечатления → фото (до 10, можно альбомом). Текстовые шаги можно пропустить «-».
+- Фото сохраняются в S3: из бота — скачиваются из Telegram, из Mini App — загружаются напрямую.
+- **Скрытые отзывы:** отзыв партнёра виден только после того, как напишешь свой. Пока его нет, партнёру приходит только уведомление, что отзыв оставлен, с предложением написать свой. Если свой так и не написан, отзывы открываются через 7 дней после свидания.
+- В карточке свидания — отзывы (длинные обрезаются) и кнопка просмотра фото альбомами.
+
+### REST API (`/api/v1`)
+
+Авторизация Mini App: заголовок `Authorization: tma <initData>`, подпись проверяется токеном бота, initData живёт сутки. При `APP_DEBUG=true` вместо неё можно передать `X-Debug-User-Id` (удобно для Swagger).
+
+| Метод | Путь                         | Что делает                                                                                                                                                        |
+| ----- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GET   | `/health`                    | Проверка приложения и БД                                                                                                                                          |
+| GET   | `/me`                        | Текущий пользователь                                                                                                                                              |
+| GET   | `/dates?upcoming=`           | Свидания пользователя. С `upcoming=true` — только будущие, без отклонённых и отменённых                                                                           |
+| POST  | `/dates`                     | Предложить свидание. Партнёру в чат бота приходит только уведомление с кнопкой открытия Mini App, без кнопок «Принять» / «Отказаться» — ответ даётся в приложении |
+| GET   | `/dates/{id}`                | Одно свидание                                                                                                                                                     |
+| POST  | `/dates/{id}/accept`         | Принять приглашение                                                                                                                                               |
+| POST  | `/dates/{id}/decline`        | Отказаться                                                                                                                                                        |
+| POST  | `/dates/{id}/cancel`         | Отменить свидание с причиной (см. ниже)                                                                                                                           |
+| GET   | `/reviews/pending`           | Состоявшиеся свидания, на которые пользователь ещё не оставил отзыв                                                                                               |
+| GET   | `/dates/{id}/reviews`        | Отзывы о свидании с учётом скрытия (см. ниже)                                                                                                                     |
+| POST  | `/dates/{id}/reviews`        | Оставить отзыв (`multipart/form-data`)                                                                                                                            |
+| GET   | `/reviews/photos/{photo_id}` | Файл фото отзыва                                                                                                                                                  |
+
+#### Отмена свидания
+
+`POST /dates/{id}/cancel` — доступно обоим участникам, пока свидание предложено или принято и ещё не началось:
+
+```json
+{ "reason": "Заболел(а), давай перенесём" }
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+`reason` — обязательно, 1–500 символов. Ответ — свидание со статусом `cancelled`; второму участнику в Telegram приходит уведомление с причиной. В ответах со свиданиями (`DateOut`) есть поля отмены, у неотменённых они `null`:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+```json
+{
+	"status": "cancelled",
+	"cancelled_at": "2026-10-13T12:00:00Z",
+	"cancelled_by": 123,
+	"cancel_reason": "…"
+}
+```
 
-export default defineConfig([
-	globalIgnores(['dist']),
-	{
-		files: ['**/*.{ts,tsx}'],
-		extends: [
-			// Other configs...
-			// Enable lint rules for React
-			reactX.configs['recommended-typescript'],
-			// Enable lint rules for React DOM
-			reactDom.configs.recommended
+Ошибки: `400` — причина из одних пробелов, `404` — свидание не найдено или пользователь не его участник, `409` — свидание уже началось, состоялось, отклонено или отменено, `422` — ошибка валидации тела.
+
+#### Отзывы
+
+`POST /dates/{id}/reviews` — форма `multipart/form-data`:
+
+| Поле                                   | Тип                         |                                             |
+| -------------------------------------- | --------------------------- | ------------------------------------------- |
+| `rating`                               | int 1–5                     | обязательно                                 |
+| `liked`, `disliked`, `food`, `comment` | строка до 2000 символов     | необязательно, пустая строка = не заполнено |
+| `photos`                               | файлы, можно повторять поле | до 10 шт., JPEG или PNG, до 10 МБ каждое    |
+
+Тип фото определяется по содержимому файла, а не по заявленному `Content-Type`. Ответ `201`:
+
+```json
+{
+	"review": {
+		"id": "…",
+		"date_id": "…",
+		"author_id": 123,
+		"rating": 5,
+		"liked": "…",
+		"disliked": null,
+		"food": null,
+		"comment": "…",
+		"photos": [
+			{ "id": "…", "position": 0, "content_type": "image/jpeg", "size": 48213 }
 		],
-		languageOptions: {
-			parserOptions: {
-				project: ['./tsconfig.node.json', './tsconfig.app.json'],
-				tsconfigRootDir: import.meta.dirname
-			}
-			// other options...
-		}
-	}
-])
+		"created_at": "2026-10-12T18:00:00Z"
+	},
+	"locked_for_partner": true
+}
+```
+
+`locked_for_partner: true` — партнёр ещё не написал свой отзыв, поэтому увидит этот только потом. Уведомления в Telegram рассылаются так же, как при отзыве через бота.
+
+Ошибки: `400` — больше 10 фото, `404` — свидание не найдено или пользователь не его участник, `409` — свидание ещё не состоялось или отзыв уже оставлен, `413` — фото больше 10 МБ, `415` — не JPEG/PNG, `422` — ошибка валидации формы.
+
+`GET /dates/{id}/reviews`:
+
+```json
+{
+	"can_review": false,
+	"reviews": [/* открытые отзывы, формат как review выше */],
+	"locked": [{ "author_id": 456, "created_at": "…" }],
+	"reveal_at": "2026-10-19T18:00:00Z"
+}
+```
+
+- `reviews` — свой отзыв и отзыв партнёра, если он уже открыт;
+- `locked` — отзыв партнёра, скрытый, пока пользователь не напишет свой;
+- `reveal_at` — когда скрытые отзывы откроются в любом случае.
+
+`GET /reviews/photos/{photo_id}` отдаёт файл с нужным `Content-Type` и `Cache-Control: private`. Для скрытого отзыва или чужого свидания ответ `404`. Тег `<img>` не умеет передавать заголовок `Authorization`, поэтому в Mini App фото нужно загружать через `fetch` и показывать через `URL.createObjectURL(blob)`.
+
+Админ-API — заголовок `X-API-Key` (= `APP_ADMIN_API_KEY`; без ключа отвечает 503):
+
+| Метод | Путь                                                     | Что делает               |
+| ----- | -------------------------------------------------------- | ------------------------ |
+| GET   | `/admin/dates?user_id=&status=&upcoming=&limit=&offset=` | Все свидания с фильтрами |
+| GET   | `/admin/dates/{id}`                                      | Любое свидание           |
+
+CORS: в debug разрешён любой домен, в проде — только из `APP_CORS_ORIGINS`.
+
+## Настройки
+
+Читаются из переменных окружения или файла `.env.dev` (путь меняется через `ENV_FILE`).
+
+| Переменная                                                    | Назначение                   |
+| ------------------------------------------------------------- | ---------------------------- |
+| `BOT_TOKEN`                                                   | Токен бота                   |
+| `BOT_WEBAPP_URL`                                              | URL Mini App (необязательно) |
+| `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_DATABASE` | PostgreSQL                   |
+| `S3_ENDPOINT`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `S3_BUCKET`  | Хранилище фото               |
+| `APP_DEBUG`                                                   | Debug-режим API              |
+| `APP_ADMIN_API_KEY`                                           | Ключ админ-API               |
+| `APP_CORS_ORIGINS`                                            | Домены фронта через запятую  |
+
+## Запуск
+
+Нужны [uv](https://docs.astral.sh/uv/), [Task](https://taskfile.dev/) и Docker.
+
+```bash
+task install                     # зависимости
+task dev                         # Postgres + SeaweedFS + миграции + приложение
+task up                          # всё целиком в Docker
+task migrate:new -- "описание"   # новая миграция
+task migrate                     # накатить миграции
+task bot:avatar                  # поставить аватарку бота (photo/heart.png)
 ```

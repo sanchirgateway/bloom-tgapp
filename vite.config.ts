@@ -14,7 +14,10 @@ export default defineConfig({
 		host: true,
 		allowedHosts: [
 			'.free.pinggy.net',
-			'qobqf-88-218-248-103.run.pinggy-free.link'
-		]
+			'https://jiboc-88-218-248-103.run.pinggy-free.link'
+		],
+		proxy: {
+			'/api': 'http://localhost:8000'
+		}
 	}
 })

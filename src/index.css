@@ -1,5 +1,78 @@
 @import 'tailwindcss';
+
+/* dark: в Tailwind — по теме Telegram (data-theme ставится в app/init.ts), а не по системной */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+/*
+ * Цвета — из темы Telegram, как в его настройках: страница — secondary_bg,
+ * плашки-секции — section_bg. Старые клиенты не шлют section_*, отсюда фолбэки.
+ */
+@theme inline {
+	--color-page: var(--tg-theme-secondary-bg-color, #efeff4);
+	--color-card: var(
+		--tg-theme-section-bg-color,
+		var(--tg-theme-bg-color, #fff)
+	);
+	--color-text: var(--tg-theme-text-color, #000);
+	--color-hint: var(--tg-theme-hint-color, #8e8e93);
+	--color-link: var(--tg-theme-link-color, #2481cc);
+	--color-accent: var(--tg-theme-button-color, #2481cc);
+	--color-on-accent: var(--tg-theme-button-text-color, #fff);
+	--color-section-title: var(
+		--tg-theme-section-header-text-color,
+		var(--tg-theme-hint-color, #8e8e93)
+	);
+	--color-separator: var(
+		--tg-theme-section-separator-color,
+		color-mix(in srgb, var(--tg-theme-hint-color, #8e8e93) 25%, transparent)
+	);
+	--color-danger: var(--tg-theme-destructive-text-color, #e53935);
+}
+
+/* Нативные контролы (пикер даты, скроллбары, автозаполнение) — в цвет темы */
+:root {
+	color-scheme: light;
+}
+[data-theme='dark'] {
+	color-scheme: dark;
+}
+
 body {
-	background: var(--tg-theme-bg-color);
-	color: var(--tg-theme-text-color);
+	margin: 0;
+	background: var(--color-page);
+	color: var(--color-text);
+	font-family:
+		-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+	-webkit-tap-highlight-color: transparent;
+	/* В полноэкранном режиме контент не должен уходить под вырез и кнопки Telegram */
+	padding-top: calc(
+		var(--tg-viewport-safe-area-inset-top, 0px) +
+			var(--tg-viewport-content-safe-area-inset-top, 0px)
+	);
+	padding-bottom: calc(
+		var(--tg-viewport-safe-area-inset-bottom, 0px) +
+			var(--tg-viewport-content-safe-area-inset-bottom, 0px)
+	);
+	padding-left: var(--tg-viewport-safe-area-inset-left, 0px);
+	padding-right: var(--tg-viewport-safe-area-inset-right, 0px);
+}
+
+/* Фон бота: узор под плотной подложкой цвета страницы — чтобы не спорил с текстом */
+body::before {
+	content: '';
+	position: fixed;
+	inset: 0;
+	z-index: -1;
+	pointer-events: none;
+	--veil: color-mix(in srgb, var(--color-page) 82%, transparent);
+	background:
+		linear-gradient(var(--veil), var(--veil)),
+		url('./shared/assets/bgbot.webp') center / 400px repeat;
+}
+
+[data-theme='dark'] body::before {
+	--veil: color-mix(in srgb, var(--color-page) 92%, transparent);
+	background:
+		linear-gradient(var(--veil), var(--veil)),
+		url('./shared/assets/bgbotdark.webp') center / 400px repeat;
 }
