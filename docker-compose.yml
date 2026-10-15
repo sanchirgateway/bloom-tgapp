@@ -1,0 +1,31 @@
+# Прод (Coolify, build pack "Docker Compose") — как у бэкенда.
+# VITE_API_URL задаётся в Coolify → Environment Variables и вшивается в бандл при сборке,
+# поэтому после смены адреса API нужна пересборка, а не просто рестарт.
+# Домен мини-аппа добавьте в APP_CORS_ORIGINS бэкенда.
+#
+# Локально: VITE_API_URL=https://api.example.com/api/v1 docker compose up -d --build
+# → http://localhost:8080
+
+services:
+  web:
+    build:
+      context: .
+      args:
+        VITE_API_URL: ${VITE_API_URL:?}
+    restart: unless-stopped
+    ports:
+      - '${WEB_PORT:-8080}:8080'
+    read_only: true
+    # Файловая система только для чтения; nginx пишет лишь pid и временные файлы
+    tmpfs:
+      - /tmp
+      - /var/cache/nginx
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
