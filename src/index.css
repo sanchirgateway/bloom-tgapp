@@ -57,22 +57,21 @@ body {
 	padding-right: var(--tg-viewport-safe-area-inset-right, 0px);
 }
 
-/* Фон бота: узор под плотной подложкой цвета страницы — чтобы не спорил с текстом */
+/* Фон: фото на весь экран под подложкой цвета страницы — чтобы не спорило с текстом */
 body::before {
 	content: '';
 	position: fixed;
 	inset: 0;
 	z-index: -1;
 	pointer-events: none;
-	--veil: color-mix(in srgb, var(--color-page) 82%, transparent);
+	--veil: color-mix(in srgb, var(--color-page) 70%, transparent);
+	--bg-img: url('./shared/assets/bgbot.webp');
 	background:
 		linear-gradient(var(--veil), var(--veil)),
-		url('./shared/assets/bgbot.webp') center / 400px repeat;
+		var(--bg-img) center / cover no-repeat;
 }
 
 [data-theme='dark'] body::before {
-	--veil: color-mix(in srgb, var(--color-page) 92%, transparent);
-	background:
-		linear-gradient(var(--veil), var(--veil)),
-		url('./shared/assets/bgbotdark.webp') center / 400px repeat;
+	--veil: color-mix(in srgb, var(--color-page) 45%, transparent);
+	--bg-img: url('./shared/assets/bgbotdark.webp');
 }
