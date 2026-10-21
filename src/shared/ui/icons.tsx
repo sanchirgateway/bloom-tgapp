@@ -116,3 +116,30 @@ export const MoonIcon = (p: IconProps) => (
 		<path d='M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z' />
 	</Svg>
 )
+
+export const FlowerIcon = (p: IconProps) => (
+	<Svg {...p}>
+		<path d='M12 13c-3 0-5-2.5-5-7 2 0 3.6 1 5 3 1.4-2 3-3 5-3 0 4.5-2 7-5 7z' />
+		<path d='M12 13v8M12 18c-1-2-2.8-3-5-3 .4 2.3 2.2 3 5 3zM12 19c1-1.6 2.6-2.5 4.5-2.5-.4 1.9-2 2.5-4.5 2.5z' />
+	</Svg>
+)
+
+export const GiftIcon = (p: IconProps) => (
+	<Svg {...p}>
+		<rect x='3' y='8' width='18' height='4' rx='1' />
+		<path d='M12 8v13M5 12v9h14v-9M12 8S10.5 3 8 3a2.5 2.5 0 0 0 0 5M12 8s1.5-5 4-5a2.5 2.5 0 0 1 0 5' />
+	</Svg>
+)
+
+export const CameraIcon = (p: IconProps) => (
+	<Svg {...p}>
+		<path d='M4 7h3l2-3h6l2 3h3a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z' />
+		<circle cx='12' cy='13' r='3.5' />
+	</Svg>
+)
+
+export const TrashIcon = (p: IconProps) => (
+	<Svg {...p}>
+		<path d='M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3' />
+	</Svg>
+)

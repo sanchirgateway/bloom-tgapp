@@ -1,4 +1,4 @@
-import type { DateItem, DateStatus } from '../../shared/api/types'
+import type { DateItem, DateStatus, User } from '../../shared/api/types'
 
 // Цвет статуса: точка и текст. На светлом фоне -500 бледные — там берём оттенок темнее
 export const statusTone: Record<DateStatus, { text: string; dot: string }> = {
@@ -38,6 +38,16 @@ export function statusText(date: DateItem, meId?: number) {
 
 export const partnerOf = (date: DateItem, meId?: number) =>
 	date.creator.id === meId ? date.invitee : date.creator
+
+/** Имени партнёра нет в профиле — берём из любого общего свидания */
+export function findPartnerName(me: User | undefined, dates: DateItem[]) {
+	if (!me?.partner_id) return null
+	for (const d of dates) {
+		const p = partnerOf(d, me.id)
+		if (p.id === me.partner_id) return p.first_name
+	}
+	return null
+}
 
 // Лимит бэка на причину отмены
 export const CANCEL_REASON_MAX = 500

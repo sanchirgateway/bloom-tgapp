@@ -1,4 +1,4 @@
-// Повторяют схемы бэка: bloomy_bot/app/feature/{user,dates,reviews}/schemas.py
+// Повторяют схемы бэка: bloomy_bot/app/feature/{user,dates,reviews,flowers}/schemas.py
 
 export interface UserShort {
 	id: number
@@ -95,4 +95,61 @@ export interface DateItem {
 	cancelled_by: number | null
 	cancel_reason: string | null
 	created_at: string
+}
+
+// --- Цветы: bloomy_bot/app/feature/flowers/schemas.py ---
+
+export type FlowerOccasion =
+	'no_reason' | 'date' | 'birthday' | 'anniversary' | 'holiday' | 'apology'
+
+export type FlowerReaction = 'loved' | 'touched' | 'happy' | 'meh'
+
+export interface FlowerPhoto {
+	/** Файл: GET /flowers/photos/{id} */
+	id: string
+	/** Даритель — сам букет, получатель — например, букет в вазе */
+	author_id: number
+	/** Своя у каждого автора */
+	position: number
+	size: number
+}
+
+/** Элемент GET /flowers/photos: фото вместе с букетом, к которому оно приложено */
+export interface FlowerPhotoListItem extends FlowerPhoto {
+	/** Букет: GET /flowers/{gift_id} */
+	gift_id: string
+	created_at: string
+}
+
+/** Чьи фото: свои, партнёра или все */
+export type FlowerPhotoAuthor = 'mine' | 'partner' | 'all'
+
+export interface FlowerGift {
+	id: string
+	giver_id: number
+	recipient_id: number
+	date_id: string | null
+	/** «15 белых роз» */
+	flowers: string
+	occasion: FlowerOccasion | null
+	comment: string | null
+	/** В рублях; приходит только дарителю, получателю всегда null */
+	price: number | null
+	/** null — ещё не вручён (сюрприз): такие видит только даритель */
+	given_at: string | null
+	reaction: FlowerReaction | null
+	reacted_at: string | null
+	photos: FlowerPhoto[]
+	created_at: string
+}
+
+export interface FlowerCreate {
+	flowers: string
+	occasion?: FlowerOccasion
+	comment?: string
+	price?: number
+	date_id?: string
+	/** ISO с часовым поясом; не передан — сюрприз, партнёр запись не видит */
+	given_at?: string
+	photos: Blob[]
 }

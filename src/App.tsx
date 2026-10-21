@@ -4,6 +4,9 @@ import { DatesList } from './features/dates/DatesList'
 import { DateDetails } from './features/dates/DateDetails'
 import { DateForm } from './features/dates/DateForm'
 import { ReviewForm } from './features/reviews/ReviewForm'
+import { FlowersList } from './features/flowers/FlowersList'
+import { FlowerDetails } from './features/flowers/FlowerDetails'
+import { FlowerForm } from './features/flowers/FlowerForm'
 import { DevThemeToggle } from './shared/ui/DevThemeToggle'
 
 type Screen =
@@ -11,14 +14,20 @@ type Screen =
 	| { name: 'date'; id: string }
 	| { name: 'new' }
 	| { name: 'review'; dateId: string }
+	| { name: 'flowers' }
+	| { name: 'flower'; id: string }
+	| { name: 'newFlower' }
 
-/** Куда ведёт «Назад»: с отзыва — в карточку, с остального — в список */
+/** Куда ведёт «Назад»: с отзыва — в карточку, с букета — в цветы, с остального — в список */
 function parentOf(screen: Screen): Screen | null {
 	switch (screen.name) {
 		case 'list':
 			return null
 		case 'review':
 			return { name: 'date', id: screen.dateId }
+		case 'flower':
+		case 'newFlower':
+			return { name: 'flowers' }
 		default:
 			return { name: 'list' }
 	}
@@ -55,6 +64,7 @@ function Screens() {
 					onOpen={id => setScreen({ name: 'date', id })}
 					onCreate={() => setScreen({ name: 'new' })}
 					onReview={dateId => setScreen({ name: 'review', dateId })}
+					onFlowers={() => setScreen({ name: 'flowers' })}
 				/>
 			)
 		case 'date':
@@ -73,5 +83,22 @@ function Screens() {
 					onDone={() => setScreen({ name: 'date', id: screen.dateId })}
 				/>
 			)
+		case 'flowers':
+			return (
+				<FlowersList
+					onOpen={id => setScreen({ name: 'flower', id })}
+					onCreate={() => setScreen({ name: 'newFlower' })}
+				/>
+			)
+		case 'flower':
+			return (
+				<FlowerDetails
+					id={screen.id}
+					onOpenDate={id => setScreen({ name: 'date', id })}
+					onDeleted={() => setScreen({ name: 'flowers' })}
+				/>
+			)
+		case 'newFlower':
+			return <FlowerForm onCreated={id => setScreen({ name: 'flower', id })} />
 	}
 }

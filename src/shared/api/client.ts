@@ -50,6 +50,11 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
 	return res.json() as Promise<T>
 }
 
+/** Ответ без тела (204) */
+export async function apiEmpty(path: string, init?: RequestInit) {
+	await request(path, init)
+}
+
 /** Файлы за авторизацией: <img src> не умеет слать Authorization */
 export async function apiBlob(path: string): Promise<Blob> {
 	const res = await request(path)

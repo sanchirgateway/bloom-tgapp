@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import type { DateItem, Review, ReviewPhoto } from '../../shared/api/types'
+import type { DateItem, Review } from '../../shared/api/types'
 import { BottomButtons } from '../../shared/ui/BottomButtons'
+import { Gallery } from '../../shared/ui/Gallery'
 import { LockIcon, StarIcon } from '../../shared/ui/icons'
 import { SkeletonRows } from '../../shared/ui/Section'
 import { formatDateTime } from '../dates/format'
@@ -95,7 +96,7 @@ export function ReviewsSection({
 }
 
 function ReviewCard({ author, review }: { author: string; review: Review }) {
-	const [opened, setOpened] = useState<ReviewPhoto | null>(null)
+	const [opened, setOpened] = useState<number | null>(null)
 	const fields = [
 		['Понравилось', review.liked],
 		['Не понравилось', review.disliked],
@@ -129,10 +130,10 @@ function ReviewCard({ author, review }: { author: string; review: Review }) {
 
 			{review.photos.length > 0 && (
 				<div className='grid grid-cols-4 gap-2'>
-					{review.photos.map(photo => (
+					{review.photos.map((photo, i) => (
 						<button
 							key={photo.id}
-							onClick={() => setOpened(photo)}
+							onClick={() => setOpened(i)}
 							className='aspect-square'
 						>
 							<PhotoImg
@@ -144,17 +145,16 @@ function ReviewCard({ author, review }: { author: string; review: Review }) {
 				</div>
 			)}
 
-			{opened && (
-				<button
-					aria-label='Закрыть'
-					onClick={() => setOpened(null)}
-					className='fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4'
-				>
-					<PhotoImg
-						id={opened.id}
-						className='max-h-full max-w-full object-contain'
-					/>
-				</button>
+			{opened !== null && (
+				<Gallery
+					photos={review.photos}
+					start={opened}
+					title={author}
+					renderPhoto={(photo, className) => (
+						<PhotoImg id={photo.id} className={className} />
+					)}
+					onClose={() => setOpened(null)}
+				/>
 			)}
 		</div>
 	)

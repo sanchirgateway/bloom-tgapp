@@ -5,6 +5,7 @@ import { BottomButtons } from '../../shared/ui/BottomButtons'
 import {
 	CalendarIcon,
 	ChevronIcon,
+	FlowerIcon,
 	HeartIcon,
 	MailIcon,
 	StarIcon
@@ -16,11 +17,11 @@ import { useDates, useRespondDate } from './api'
 import {
 	cancelledByText,
 	dateLeaf,
+	findPartnerName,
 	formatDateTime,
 	formatTime,
 	monthKey,
 	monthTitle,
-	partnerOf,
 	relativeDay,
 	statusText,
 	statusTone
@@ -31,11 +32,13 @@ type Tab = 'upcoming' | 'all'
 export function DatesList({
 	onOpen,
 	onCreate,
-	onReview
+	onReview,
+	onFlowers
 }: {
 	onOpen: (id: string) => void
 	onCreate: () => void
 	onReview: (id: string) => void
+	onFlowers: () => void
 }) {
 	const [tab, setTab] = useState<Tab>('upcoming')
 	const { data: me } = useMe()
@@ -85,6 +88,24 @@ export function DatesList({
 					next && `Ближайшее — ${relativeDay(next.starts_at, me?.timezone)}`
 				}
 			/>
+
+			<Section>
+				<button
+					onClick={onFlowers}
+					className='flex w-full items-center gap-3 p-3.5 text-left'
+				>
+					<Tile className='bg-partner/15 text-partner'>
+						<FlowerIcon className='size-5.5' />
+					</Tile>
+					<span className='flex min-w-0 flex-1 flex-col'>
+						<span className='font-semibold'>Цветы</span>
+						<span className='text-sm text-hint'>
+							Подаренные букеты, фото и реакции
+						</span>
+					</span>
+					<ChevronIcon className='size-5 shrink-0 text-hint' />
+				</button>
+			</Section>
 
 			{(invites.length > 0 || pending.length > 0) && (
 				<Section title='Нужно ваше действие'>
@@ -369,16 +390,6 @@ function Tile({
 			{children}
 		</span>
 	)
-}
-
-/** Имени партнёра нет в профиле — берём из любого общего свидания */
-function findPartnerName(me: User | undefined, dates: DateItem[]) {
-	if (!me?.partner_id) return null
-	for (const d of dates) {
-		const p = partnerOf(d, me.id)
-		if (p.id === me.partner_id) return p.first_name
-	}
-	return null
 }
 
 function groupByMonth(dates: DateItem[], timeZone?: string) {
