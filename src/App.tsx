@@ -4,6 +4,7 @@ import { DatesList } from './features/dates/DatesList'
 import { DateDetails } from './features/dates/DateDetails'
 import { DateForm } from './features/dates/DateForm'
 import { ReviewForm } from './features/reviews/ReviewForm'
+import { DevThemeToggle } from './shared/ui/DevThemeToggle'
 
 type Screen =
 	| { name: 'list' }
@@ -24,6 +25,15 @@ function parentOf(screen: Screen): Screen | null {
 }
 
 export default function App() {
+	return (
+		<>
+			<Screens />
+			{import.meta.env.DEV && <DevThemeToggle />}
+		</>
+	)
+}
+
+function Screens() {
 	const [screen, setScreen] = useState<Screen>({ name: 'list' })
 
 	// Системная кнопка «Назад» Telegram — на всех экранах, кроме списка

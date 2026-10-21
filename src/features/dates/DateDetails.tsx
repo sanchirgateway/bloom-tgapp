@@ -78,7 +78,7 @@ export function DateDetails({
 	return (
 		<div className='flex flex-col gap-5 p-4'>
 			<header className='flex flex-col items-center gap-2.5 py-2 text-center'>
-				<div className='flex w-18 flex-col items-center overflow-hidden rounded-2xl bg-card shadow-sm'>
+				<div className='flex w-18 flex-col items-center overflow-hidden glass rounded-2xl shadow-sm'>
 					<span className='w-full bg-accent py-0.5 text-xs font-semibold text-on-accent uppercase'>
 						{leaf.month}
 					</span>
@@ -88,7 +88,7 @@ export function DateDetails({
 				</div>
 				<h1 className='text-[22px] leading-tight font-bold'>{date.title}</h1>
 				<span
-					className={`inline-flex items-center gap-1.5 rounded-full bg-card px-2.5 py-1 text-[13px] font-medium ${tone.text}`}
+					className={`inline-flex items-center gap-1.5 glass rounded-full px-2.5 py-1 text-[13px] font-medium ${tone.text}`}
 				>
 					<span className={`size-1.75 rounded-full ${tone.dot}`} />
 					{statusText(date, me?.id)}
@@ -269,7 +269,7 @@ function CancelDate({ date }: { date: DateItem }) {
 					value={reason}
 					onChange={e => setReason(e.target.value)}
 					placeholder='Партнёр увидит причину в боте'
-					className='w-full resize-none rounded-xl bg-page px-3 py-2.5 outline-none placeholder:text-hint focus:ring-2 focus:ring-accent'
+					className='w-full resize-none rounded-xl bg-fill px-3 py-2.5 outline-none placeholder:text-hint focus:ring-2 focus:ring-accent'
 				/>
 				{cancel.error && (
 					<p className='text-center text-sm text-danger'>
@@ -280,14 +280,14 @@ function CancelDate({ date }: { date: DateItem }) {
 					<button
 						disabled={cancel.isPending}
 						onClick={() => setOpen(false)}
-						className='min-h-11 flex-1 rounded-xl bg-page text-[15px] font-semibold disabled:opacity-50'
+						className='min-h-11 flex-1 rounded-xl bg-fill text-[15px] font-semibold disabled:opacity-50'
 					>
 						Не отменять
 					</button>
 					<button
 						disabled={cancel.isPending || !reason.trim()}
 						onClick={onConfirm}
-						className='min-h-11 flex-1 rounded-xl bg-page text-[15px] font-semibold text-danger disabled:opacity-50'
+						className='min-h-11 flex-1 rounded-xl bg-fill text-[15px] font-semibold text-danger disabled:opacity-50'
 					>
 						{cancel.isPending ? 'Отменяем…' : 'Отменить'}
 					</button>

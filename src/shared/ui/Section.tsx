@@ -19,7 +19,7 @@ export function Section({
 					{title}
 				</h2>
 			)}
-			<div className='overflow-hidden rounded-2xl bg-card'>
+			<div className='glass overflow-hidden rounded-2xl'>
 				{rows.map((row, i) => (
 					<div key={i}>
 						{i > 0 && <div className='ml-16 h-px bg-separator' />}
@@ -62,7 +62,7 @@ export function EmptyState({
 }) {
 	return (
 		<div className='flex flex-col items-center gap-2 px-6 py-10 text-center'>
-			<div className='mb-1 flex size-14 items-center justify-center rounded-2xl bg-card text-hint'>
+			<div className='mb-1 flex size-14 items-center justify-center glass rounded-2xl text-hint'>
 				{icon}
 			</div>
 			<p className='font-semibold'>{title}</p>

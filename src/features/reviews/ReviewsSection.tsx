@@ -48,7 +48,7 @@ export function ReviewsSection({
 			{data.reviews.length === 0 &&
 				data.locked.length === 0 &&
 				!data.can_review && (
-					<p className='rounded-2xl bg-card p-3.5 text-sm text-hint'>
+					<p className='glass rounded-2xl p-3.5 text-sm text-hint'>
 						Отзывов пока нет
 					</p>
 				)}
@@ -64,7 +64,7 @@ export function ReviewsSection({
 			{data.locked.map(locked => (
 				<div
 					key={locked.author_id}
-					className='flex gap-3 rounded-2xl bg-card p-3.5 text-sm'
+					className='flex gap-3 glass rounded-2xl p-3.5 text-sm'
 				>
 					<LockIcon className='size-5 shrink-0 text-hint' />
 					<div>
@@ -104,7 +104,7 @@ function ReviewCard({ author, review }: { author: string; review: Review }) {
 	] as const
 
 	return (
-		<div className='flex flex-col gap-2.5 rounded-2xl bg-card p-3.5 text-sm'>
+		<div className='flex flex-col gap-2.5 glass rounded-2xl p-3.5 text-sm'>
 			<div className='flex items-center justify-between'>
 				<span className='font-semibold'>{author}</span>
 				<span

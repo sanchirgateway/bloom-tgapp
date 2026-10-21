@@ -14,7 +14,7 @@ import { useMe } from '../user/api'
 import { useCreateDate } from './api'
 
 const inputClass =
-	'min-h-12 w-full rounded-xl bg-card px-3.5 py-3 outline-none placeholder:text-hint focus:ring-2 focus:ring-accent'
+	'min-h-12 w-full glass rounded-xl px-3.5 py-3 outline-none placeholder:text-hint focus:ring-2 focus:ring-accent'
 
 export function DateForm({ onCreated }: { onCreated: (id: string) => void }) {
 	const { data: me, isPending, error } = useMe()

@@ -20,7 +20,7 @@ const MAX_PHOTOS = 10
 const MAX_TEXT = 2000
 
 const inputClass =
-	'w-full resize-none rounded-xl bg-card px-3.5 py-3 outline-none placeholder:text-hint focus:ring-2 focus:ring-accent'
+	'w-full resize-none glass rounded-xl px-3.5 py-3 outline-none placeholder:text-hint focus:ring-2 focus:ring-accent'
 
 interface Photo {
 	blob: Blob
@@ -122,7 +122,7 @@ export function ReviewForm({
 			</div>
 
 			<Field label='Оценка'>
-				<div className='flex justify-between rounded-2xl bg-card px-3 py-1.5'>
+				<div className='flex justify-between glass rounded-2xl px-3 py-1.5'>
 					{[1, 2, 3, 4, 5].map(n => (
 						<button
 							key={n}
@@ -209,7 +209,7 @@ export function ReviewForm({
 						</div>
 					))}
 					{photos.length < MAX_PHOTOS && (
-						<label className='flex aspect-square cursor-pointer items-center justify-center rounded-lg bg-card text-hint'>
+						<label className='flex aspect-square cursor-pointer items-center justify-center glass rounded-lg text-hint'>
 							{processing ? (
 								<span className='size-6 animate-spin rounded-full border-2 border-hint/30 border-t-hint' />
 							) : (

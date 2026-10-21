@@ -10,6 +10,7 @@ import {
 	viewport,
 	initData
 } from '@tma.js/sdk-react'
+import { paletteColor } from '../shared/lib/palette'
 
 export async function init(debug: boolean) {
 	setDebug(debug)
@@ -29,17 +30,21 @@ export async function init(debug: boolean) {
 		themeParams.bindCssVars() // → --tg-theme-bg-color, --tg-theme-text-color ...
 		miniApp.bindCssVars() // → --tg-bg-color, --tg-header-color ...
 
-		// <html data-theme="dark|light"> — для тёмного/светлого фона в CSS
+		// <html data-theme="dark|light"> — по нему index.css выбирает фон и палитру
 		const applyTheme = (dark: boolean) => {
 			document.documentElement.dataset.theme = dark ? 'dark' : 'light'
+			// Шапка и нижняя панель Telegram — в цвет страницы под фоном
+			const page = paletteColor('page')
+			if (miniApp.setHeaderColor.isAvailable()) {
+				miniApp.setHeaderColor(
+					miniApp.setHeaderColor.supports('rgb') ? page : 'secondary_bg_color'
+				)
+			}
+			miniApp.setBgColor.ifAvailable(page)
+			miniApp.setBottomBarColor.ifAvailable(page)
 		}
 		applyTheme(themeParams.isDark())
 		themeParams.isDark.sub(applyTheme)
-
-		// Шапка и нижняя панель Telegram — в цвет страницы (см. --color-page в index.css)
-		miniApp.setHeaderColor.ifAvailable('secondary_bg_color')
-		miniApp.setBgColor.ifAvailable('secondary_bg_color')
-		miniApp.setBottomBarColor.ifAvailable('secondary_bg_color')
 	}
 
 	if (viewport.mount.isAvailable()) {

@@ -1,5 +1,11 @@
 import { useEffect, useRef } from 'react'
-import { mainButton, secondaryButton, themeParams } from '@tma.js/sdk-react'
+import {
+	mainButton,
+	secondaryButton,
+	themeParams,
+	useSignal
+} from '@tma.js/sdk-react'
+import { paletteColor } from '../lib/palette'
 import { isMockedEnv } from '../mockEnv'
 
 export interface BottomButton {
@@ -31,7 +37,7 @@ export function BottomButtons({
 		<>
 			{/* Место под фиксированной панелью, чтобы она не закрывала конец страницы */}
 			<div className={secondary && main ? 'h-32' : 'h-18'} />
-			<div className='fixed inset-x-0 bottom-0 flex flex-col gap-2 border-t border-separator bg-page px-4 pt-2.5 pb-4'>
+			<div className='fixed inset-x-0 bottom-0 flex flex-col gap-2 glass px-4 pt-2.5 pb-4'>
 				{main && <FallbackButton {...main} />}
 				{secondary && <FallbackButton {...secondary} secondary />}
 			</div>
@@ -47,6 +53,8 @@ function useNativeButton(button: NativeButton, config?: BottomButton | null) {
 	const enabled = !config?.disabled && !config?.loading
 	const loading = !!config?.loading
 	const destructive = !!config?.destructive
+	// Цвета — из палитры под фон; при смене темы перекрашиваем
+	const dark = useSignal(themeParams.isDark)
 
 	// Подписка одна на всё время показа, а обработчик — всегда свежий
 	const onClickRef = useRef(config?.onClick)
@@ -69,13 +77,14 @@ function useNativeButton(button: NativeButton, config?: BottomButton | null) {
 			isVisible: true,
 			isEnabled: enabled,
 			isLoaderVisible: loading,
+			bgColor: paletteColor(button === mainButton ? 'accent' : 'page'),
 			textColor: destructive
-				? themeParams.destructiveTextColor()
+				? paletteColor('danger')
 				: button === mainButton
-					? themeParams.buttonTextColor()
-					: themeParams.buttonColor()
+					? paletteColor('on-accent')
+					: paletteColor('accent')
 		})
-	}, [button, visible, text, enabled, loading, destructive])
+	}, [button, visible, text, enabled, loading, destructive, dark])
 
 	useEffect(() => {
 		if (!visible) return
@@ -99,7 +108,7 @@ function FallbackButton({
 			disabled={disabled || loading}
 			onClick={onClick}
 			className={`min-h-12 rounded-xl font-semibold disabled:opacity-50 ${
-				secondary ? 'bg-card' : 'bg-accent text-on-accent'
+				secondary ? 'bg-fill' : 'bg-accent text-on-accent'
 			} ${destructive ? 'text-danger' : secondary ? 'text-accent' : ''}`}
 		>
 			{loading ? '…' : text}

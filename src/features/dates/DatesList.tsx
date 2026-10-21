@@ -127,14 +127,14 @@ export function DatesList({
 				</p>
 			)}
 
-			<div className='flex gap-1 rounded-xl bg-hint/12 p-0.75'>
+			<div className='glass flex gap-1 rounded-xl p-0.75'>
 				{(['upcoming', 'all'] as const).map(t => (
 					<button
 						key={t}
 						onClick={() => onTab(t)}
 						aria-pressed={tab === t}
 						className={`min-h-9 flex-1 rounded-[10px] text-sm font-semibold transition-colors ${
-							tab === t ? 'bg-card shadow-sm' : 'text-hint'
+							tab === t ? 'bg-accent text-on-accent shadow-sm' : 'text-hint'
 						}`}
 					>
 						{t === 'upcoming' ? 'Предстоящие' : 'Все'}
@@ -229,7 +229,7 @@ function PairHeader({
 				<Avatar name={me.first_name} className='bg-accent text-on-accent' />
 				<Avatar
 					name={partnerName ?? '♥'}
-					className='-ml-2.5 bg-pink-600 text-white ring-2 ring-page'
+					className='-ml-2.5 bg-partner text-white ring-2 ring-page'
 				/>
 			</div>
 			<div className='flex min-w-0 flex-col'>
@@ -296,7 +296,7 @@ function InviteRow({
 				<button
 					disabled={busy}
 					onClick={() => onRespond(false)}
-					className='min-h-11 flex-1 rounded-xl bg-page text-[15px] font-semibold text-danger disabled:opacity-50'
+					className='min-h-11 flex-1 rounded-xl bg-fill text-[15px] font-semibold text-danger disabled:opacity-50'
 				>
 					Отказаться
 				</button>
@@ -324,7 +324,7 @@ function DateRow({
 			className='flex w-full items-center gap-3.5 p-3.5 text-left'
 		>
 			<span
-				className={`flex w-12 shrink-0 flex-col items-center rounded-xl bg-page py-1.5 ${inactive ? 'opacity-60' : ''}`}
+				className={`flex w-12 shrink-0 flex-col items-center rounded-xl bg-fill py-1.5 ${inactive ? 'opacity-60' : ''}`}
 			>
 				<span className='text-xl leading-tight font-bold'>{leaf.day}</span>
 				<span className='text-[11px] text-hint uppercase'>{leaf.weekday}</span>
