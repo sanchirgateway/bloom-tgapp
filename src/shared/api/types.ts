@@ -12,6 +12,13 @@ export interface User extends UserShort {
 	partner_id: number | null
 }
 
+export interface Pair {
+	/** null — пары ещё нет */
+	partner: UserShort | null
+	/** t.me/<bot>?start=pair_…, только пока пары нет */
+	invite_link: string | null
+}
+
 export type DateStatus =
 	'proposed' | 'planned' | 'declined' | 'done' | 'cancelled'
 
@@ -95,6 +102,41 @@ export interface DateItem {
 	cancelled_by: number | null
 	cancel_reason: string | null
 	created_at: string
+}
+
+// --- Вишлист: bloomy_bot/app/feature/wishlist/schemas.py ---
+
+export type WishOwner = 'mine' | 'partner'
+
+export interface WishItem {
+	id: string
+	owner_id: number
+	title: string
+	url: string | null
+	/** Примерная цена в рублях */
+	price: number | null
+	/** Размер, цвет, где купить */
+	note: string | null
+	/** Владельцу всегда false: бронь партнёра — сюрприз. Не сбрасывается при исполнении */
+	reserved_by_me: boolean
+	/** Не null — желание исполнено */
+	received_at: string | null
+	created_at: string
+}
+
+export interface WishCreate {
+	title: string
+	url?: string
+	price?: number
+	note?: string
+}
+
+/** Меняются только переданные поля. url, note: "" — стереть; price: null — стереть */
+export interface WishUpdate {
+	title?: string
+	url?: string
+	price?: number | null
+	note?: string
 }
 
 // --- Цветы: bloomy_bot/app/feature/flowers/schemas.py ---

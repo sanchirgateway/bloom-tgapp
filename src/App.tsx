@@ -7,6 +7,10 @@ import { ReviewForm } from './features/reviews/ReviewForm'
 import { FlowersList } from './features/flowers/FlowersList'
 import { FlowerDetails } from './features/flowers/FlowerDetails'
 import { FlowerForm } from './features/flowers/FlowerForm'
+import { WishlistList } from './features/wishlist/WishlistList'
+import { WishDetails } from './features/wishlist/WishDetails'
+import { EditWishForm, NewWishForm } from './features/wishlist/WishForm'
+import type { WishTab } from './features/wishlist/format'
 import { DevThemeToggle } from './shared/ui/DevThemeToggle'
 
 type Screen =
@@ -17,6 +21,10 @@ type Screen =
 	| { name: 'flowers' }
 	| { name: 'flower'; id: string }
 	| { name: 'newFlower' }
+	| { name: 'wishlist'; tab: WishTab }
+	| { name: 'wish'; id: string; tab: WishTab }
+	| { name: 'newWish' }
+	| { name: 'editWish'; id: string; tab: WishTab }
 
 /** Куда ведёт «Назад»: с отзыва — в карточку, с букета — в цветы, с остального — в список */
 function parentOf(screen: Screen): Screen | null {
@@ -28,6 +36,12 @@ function parentOf(screen: Screen): Screen | null {
 		case 'flower':
 		case 'newFlower':
 			return { name: 'flowers' }
+		case 'wish':
+			return { name: 'wishlist', tab: screen.tab }
+		case 'newWish':
+			return { name: 'wishlist', tab: 'mine' }
+		case 'editWish':
+			return { name: 'wish', id: screen.id, tab: screen.tab }
 		default:
 			return { name: 'list' }
 	}
@@ -65,6 +79,7 @@ function Screens() {
 					onCreate={() => setScreen({ name: 'new' })}
 					onReview={dateId => setScreen({ name: 'review', dateId })}
 					onFlowers={() => setScreen({ name: 'flowers' })}
+					onWishlist={() => setScreen({ name: 'wishlist', tab: 'mine' })}
 				/>
 			)
 		case 'date':
@@ -100,5 +115,39 @@ function Screens() {
 			)
 		case 'newFlower':
 			return <FlowerForm onCreated={id => setScreen({ name: 'flower', id })} />
+		case 'wishlist':
+			return (
+				<WishlistList
+					tab={screen.tab}
+					onTab={tab => setScreen({ name: 'wishlist', tab })}
+					onOpen={id => setScreen({ name: 'wish', id, tab: screen.tab })}
+					onCreate={() => setScreen({ name: 'newWish' })}
+				/>
+			)
+		case 'wish':
+			return (
+				<WishDetails
+					id={screen.id}
+					onEdit={() =>
+						setScreen({ name: 'editWish', id: screen.id, tab: screen.tab })
+					}
+					onDeleted={() => setScreen({ name: 'wishlist', tab: screen.tab })}
+				/>
+			)
+		case 'newWish':
+			return (
+				<NewWishForm
+					onSaved={() => setScreen({ name: 'wishlist', tab: 'mine' })}
+				/>
+			)
+		case 'editWish':
+			return (
+				<EditWishForm
+					id={screen.id}
+					onSaved={() =>
+						setScreen({ name: 'wish', id: screen.id, tab: screen.tab })
+					}
+				/>
+			)
 	}
 }

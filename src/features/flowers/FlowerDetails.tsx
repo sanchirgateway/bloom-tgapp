@@ -18,9 +18,9 @@ import {
 } from '../../shared/ui/icons'
 import { Gallery } from '../../shared/ui/Gallery'
 import { EmptyState, Section, SkeletonRows } from '../../shared/ui/Section'
-import { useDate, usePartnerName } from '../dates/api'
+import { useDate } from '../dates/api'
 import { formatDay, relativeDay } from '../dates/format'
-import { useMe } from '../user/api'
+import { useMe, usePartnerName } from '../user/api'
 import {
 	useAddFlowerPhotos,
 	useDeleteFlowers,

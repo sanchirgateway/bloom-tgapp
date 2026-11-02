@@ -22,6 +22,10 @@
 	--separator: rgb(20 60 90 / 0.1);
 	--danger: #d6363c;
 	--veil: rgb(220 236 245 / 0.35);
+	/* Партнёрский цвет слишком светлый для мелкого текста на стекле: подарки — темнее */
+	--gift: #b92f68;
+	--on-gift: #ffffff;
+	--perforation: rgb(20 60 90 / 0.22);
 }
 [data-theme='dark'] {
 	--page: #14050a;
@@ -37,6 +41,9 @@
 	--separator: rgb(255 200 212 / 0.12);
 	--danger: #ff7a6b;
 	--veil: rgb(10 2 5 / 0.4);
+	--gift: #ff8fa3;
+	--on-gift: #3a0d18;
+	--perforation: rgb(255 200 212 / 0.28);
 }
 
 @theme inline {
@@ -52,6 +59,9 @@
 	--color-section-title: var(--section-title);
 	--color-separator: var(--separator);
 	--color-danger: var(--danger);
+	--color-gift: var(--gift);
+	--color-on-gift: var(--on-gift);
+	--color-perforation: var(--perforation);
 }
 
 /* Плашка поверх фото: полупрозрачная, с размытием того, что под ней */
@@ -62,12 +72,53 @@
 	backdrop-filter: blur(20px) saturate(1.4);
 }
 
+/* Бирка вишлиста: вырезы сверху и снизу на линии перфорации, перед корешком шириной w-24 */
+@utility wish-tag {
+	--notch: radial-gradient(
+		circle 7px at calc(100% - 6rem) 0,
+		transparent 6.5px,
+		#000 7px
+	);
+	--notch-end: radial-gradient(
+		circle 7px at calc(100% - 6rem) 100%,
+		transparent 6.5px,
+		#000 7px
+	);
+	-webkit-mask: var(--notch), var(--notch-end);
+	-webkit-mask-composite: source-in;
+	mask: var(--notch), var(--notch-end);
+	mask-composite: intersect;
+}
+
+/* Большая бирка в карточке: вырезы слева и справа над полосой высотой h-18 */
+@utility wish-ticket {
+	--notch: radial-gradient(
+		circle 9px at 0 calc(100% - 4.5rem),
+		transparent 8.5px,
+		#000 9px
+	);
+	--notch-end: radial-gradient(
+		circle 9px at 100% calc(100% - 4.5rem),
+		transparent 8.5px,
+		#000 9px
+	);
+	-webkit-mask: var(--notch), var(--notch-end);
+	-webkit-mask-composite: source-in;
+	mask: var(--notch), var(--notch-end);
+	mask-composite: intersect;
+}
+
 /* Нативные контролы (пикер даты, скроллбары, автозаполнение) — в цвет темы */
 :root {
 	color-scheme: light;
 }
 [data-theme='dark'] {
 	color-scheme: dark;
+}
+
+/* Место под скроллбар резервируем всегда, иначе ширина контента прыгает, когда длина страницы меняется */
+html {
+	scrollbar-gutter: stable;
 }
 
 body {

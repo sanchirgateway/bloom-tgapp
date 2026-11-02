@@ -8,9 +8,10 @@ import {
 	wallClockToIso
 } from '../../shared/lib/time'
 import { BottomButtons } from '../../shared/ui/BottomButtons'
-import { HeartIcon, UserIcon } from '../../shared/ui/icons'
+import { HeartIcon } from '../../shared/ui/icons'
 import { EmptyState, SkeletonRows } from '../../shared/ui/Section'
 import { useMe } from '../user/api'
+import { PairInvite } from '../user/PairInvite'
 import { useCreateDate } from './api'
 
 const inputClass =
@@ -50,11 +51,9 @@ export function DateForm({ onCreated }: { onCreated: (id: string) => void }) {
 	}
 	if (me.partner_id === null) {
 		return (
-			<EmptyState
-				icon={<UserIcon className='size-7' />}
-				title='Сначала добавьте пару'
-				text='Отправьте боту /pair и перешлите ссылку партнёру'
-			/>
+			<div className='p-4'>
+				<PairInvite title='Сначала добавьте пару' />
+			</div>
 		)
 	}
 

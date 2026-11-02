@@ -10,9 +10,8 @@ import {
 	GiftIcon
 } from '../../shared/ui/icons'
 import { EmptyState, Section, SkeletonRows } from '../../shared/ui/Section'
-import { usePartnerName } from '../dates/api'
 import { monthKey, monthTitle, plural } from '../dates/format'
-import { useMe } from '../user/api'
+import { useMe, usePartnerName } from '../user/api'
 import { useFlowerPhotos, useFlowers } from './api'
 import { PhotoImg } from './PhotoImg'
 import {

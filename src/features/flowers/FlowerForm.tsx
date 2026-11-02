@@ -17,14 +17,10 @@ import {
 	wallClockToIso
 } from '../../shared/lib/time'
 import { BottomButtons } from '../../shared/ui/BottomButtons'
-import {
-	CloseIcon,
-	FlowerIcon,
-	PlusIcon,
-	UserIcon
-} from '../../shared/ui/icons'
+import { CloseIcon, FlowerIcon, PlusIcon } from '../../shared/ui/icons'
 import { EmptyState, SkeletonRows } from '../../shared/ui/Section'
 import { useMe } from '../user/api'
+import { PairInvite } from '../user/PairInvite'
 import { useCreateFlowers } from './api'
 import {
 	FLOWERS_MAX,
@@ -98,11 +94,9 @@ export function FlowerForm({ onCreated }: { onCreated: (id: string) => void }) {
 	}
 	if (me.partner_id === null) {
 		return (
-			<EmptyState
-				icon={<UserIcon className='size-7' />}
-				title='Сначала добавьте пару'
-				text='Отправьте боту /pair и перешлите ссылку партнёру'
-			/>
+			<div className='p-4'>
+				<PairInvite title='Сначала добавьте пару' />
+			</div>
 		)
 	}
 

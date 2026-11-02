@@ -1,8 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '../../shared/api/client'
 import type { DateCreate, DateItem } from '../../shared/api/types'
-import { useMe } from '../user/api'
-import { findPartnerName } from './format'
 
 export const datesKeys = {
 	all: ['dates'] as const,
@@ -72,11 +70,4 @@ export const useRespondDate = () => {
 			return qc.invalidateQueries({ queryKey: ['dates', 'list'] })
 		}
 	})
-}
-
-/** Имени партнёра нет в профиле — берём из общих свиданий (тот же запрос, что вкладка «Все») */
-export const usePartnerName = () => {
-	const { data: me } = useMe()
-	const { data = [] } = useDates(false)
-	return findPartnerName(me, data)
 }

@@ -17,7 +17,8 @@ export default defineConfig({
 			'https://jiboc-88-218-248-103.run.pinggy-free.link'
 		],
 		proxy: {
-			'/api': 'http://localhost:8000'
+			// Не localhost: он может разрешиться в ::1, а там порт 8000 занят другим бэкендом
+			'/api': 'http://127.0.0.1:8000'
 		}
 	}
 })

@@ -6,18 +6,19 @@ import {
 	CalendarIcon,
 	ChevronIcon,
 	FlowerIcon,
+	GiftIcon,
 	HeartIcon,
 	MailIcon,
 	StarIcon
 } from '../../shared/ui/icons'
 import { EmptyState, Section, SkeletonRows } from '../../shared/ui/Section'
 import { usePendingReviews } from '../reviews/api'
-import { useMe } from '../user/api'
+import { useMe, usePartnerName } from '../user/api'
+import { PairInvite } from '../user/PairInvite'
 import { useDates, useRespondDate } from './api'
 import {
 	cancelledByText,
 	dateLeaf,
-	findPartnerName,
 	formatDateTime,
 	formatTime,
 	monthKey,
@@ -33,12 +34,14 @@ export function DatesList({
 	onOpen,
 	onCreate,
 	onReview,
-	onFlowers
+	onFlowers,
+	onWishlist
 }: {
 	onOpen: (id: string) => void
 	onCreate: () => void
 	onReview: (id: string) => void
 	onFlowers: () => void
+	onWishlist: () => void
 }) {
 	const [tab, setTab] = useState<Tab>('upcoming')
 	const { data: me } = useMe()
@@ -57,11 +60,7 @@ export function DatesList({
 	const next = upcoming.find(
 		d => d.status === 'planned' || d.status === 'proposed'
 	)
-	const partnerName = findPartnerName(me, [
-		...upcoming,
-		...(data ?? []),
-		...pending
-	])
+	const partnerName = usePartnerName()
 
 	const onRespond = (id: string, accept: boolean) =>
 		respond.mutate(
@@ -102,6 +101,19 @@ export function DatesList({
 						<span className='text-sm text-hint'>
 							Подаренные букеты, фото и реакции
 						</span>
+					</span>
+					<ChevronIcon className='size-5 shrink-0 text-hint' />
+				</button>
+				<button
+					onClick={onWishlist}
+					className='flex w-full items-center gap-3 p-3.5 text-left'
+				>
+					<Tile className='bg-accent/15 text-accent'>
+						<GiftIcon className='size-5.5' />
+					</Tile>
+					<span className='flex min-w-0 flex-1 flex-col'>
+						<span className='font-semibold'>Вишлист</span>
+						<span className='text-sm text-hint'>Что подарить друг другу</span>
 					</span>
 					<ChevronIcon className='size-5 shrink-0 text-hint' />
 				</button>
@@ -232,17 +244,7 @@ function PairHeader({
 }) {
 	if (!me) return <div className='h-11' />
 
-	if (me.partner_id === null) {
-		return (
-			<div className='flex flex-col gap-1'>
-				<h1 className='text-xl font-bold'>Пары пока нет</h1>
-				<p className='text-sm text-hint'>
-					Отправьте боту /pair и перешлите ссылку партнёру — после этого можно
-					предлагать свидания
-				</p>
-			</div>
-		)
-	}
+	if (me.partner_id === null) return <PairInvite />
 
 	return (
 		<div className='flex items-center gap-3'>

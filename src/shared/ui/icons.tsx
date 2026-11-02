@@ -138,6 +138,20 @@ export const CameraIcon = (p: IconProps) => (
 	</Svg>
 )
 
+export const LinkIcon = (p: IconProps) => (
+	<Svg {...p}>
+		<path d='M10 14a5 5 0 0 0 7.1 0l3-3A5 5 0 0 0 13 4l-1.5 1.5' />
+		<path d='M14 10a5 5 0 0 0-7.1 0l-3 3A5 5 0 0 0 11 20l1.5-1.5' />
+	</Svg>
+)
+
+export const PencilIcon = (p: IconProps) => (
+	<Svg {...p}>
+		<path d='M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z' />
+		<path d='m13.5 6.5 4 4' />
+	</Svg>
+)
+
 export const TrashIcon = (p: IconProps) => (
 	<Svg {...p}>
 		<path d='M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3' />
