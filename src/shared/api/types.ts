@@ -121,7 +121,11 @@ export interface WishItem {
 	reserved_by_me: boolean
 	/** Не null — желание исполнено */
 	received_at: string | null
+	/** Фото: GET /wishlist/{id}/photo */
+	has_photo: boolean
 	created_at: string
+	/** Меняется и при замене фото — по нему сбрасываем кэш картинки */
+	updated_at: string
 }
 
 export interface WishCreate {

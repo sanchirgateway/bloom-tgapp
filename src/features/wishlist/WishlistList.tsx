@@ -1,16 +1,38 @@
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { hapticFeedback } from '@tma.js/sdk-react'
 import type { WishItem, WishOwner } from '../../shared/api/types'
 import { BottomButtons } from '../../shared/ui/BottomButtons'
-import { GiftIcon, HeartIcon, LockIcon } from '../../shared/ui/icons'
+import {
+	ChevronIcon,
+	GiftIcon,
+	HeartIcon,
+	LockIcon
+} from '../../shared/ui/icons'
 import { EmptyState, SkeletonRows } from '../../shared/ui/Section'
 import { plural } from '../dates/format'
 import { formatPrice, formatShortDay } from '../flowers/format'
 import { useMe, usePartnerName } from '../user/api'
 import { PairInvite } from '../user/PairInvite'
 import { useWishes } from './api'
-import { linkHost, type WishTab } from './format'
+import type { WishTab } from './format'
+import { WishPhoto } from './WishPhoto'
 
 const isActive = (wish: WishItem) => wish.received_at === null
+
+/** В каждой полке — от самого старого желания к самому новому */
+const byOldest = (a: WishItem, b: WishItem) =>
+	Date.parse(a.created_at) - Date.parse(b.created_at)
+
+/** Полки по бюджету: партнёру проще выбрать подарок. Пустые не показываем */
+const priceShelves: {
+	title: string
+	fits: (price: number | null) => boolean
+}[] = [
+	{ title: 'До 2 000 ₽', fits: p => p !== null && p <= 2_000 },
+	{ title: 'До 10 000 ₽', fits: p => p !== null && p > 2_000 && p <= 10_000 },
+	{ title: 'Мечты', fits: p => p !== null && p > 10_000 },
+	{ title: 'Без цены', fits: p => p === null }
+]
 
 /** Строка над списком. Считаем только по полям ответа: у владельца reserved_by_me всегда false */
 function summary(wishes: WishItem[], partnerName: string | null) {
@@ -181,19 +203,25 @@ function ActiveWishes({
 	}
 
 	return (
-		<div className='flex flex-col gap-2.5'>
-			<p className='mx-1 text-sm font-medium text-section-title'>
+		<>
+			<p className='-mb-1 mx-1 text-sm font-medium text-section-title'>
 				{summary(active, partnerName)}
 			</p>
-			{active.map(w => (
-				<WishTag
-					key={w.id}
-					wish={w}
-					timeZone={timeZone}
-					onOpen={() => onOpen(w.id)}
-				/>
-			))}
-		</div>
+			{priceShelves.map(shelf => {
+				const wishes = active.filter(w => shelf.fits(w.price))
+				return (
+					wishes.length > 0 && (
+						<Shelf
+							key={shelf.title}
+							title={shelf.title}
+							wishes={wishes}
+							timeZone={timeZone}
+							onOpen={onOpen}
+						/>
+					)
+				)
+			})}
+		</>
 	)
 }
 
@@ -243,23 +271,107 @@ function DoneWishes({
 	}
 
 	return groups.map(group => (
-		<section key={group.title} className='flex flex-col gap-2.5'>
-			<h2 className='mx-4 text-[13px] font-medium tracking-wide text-section-title uppercase'>
-				{group.title}
-			</h2>
-			{group.items.map(w => (
-				<WishTag
-					key={w.id}
-					wish={w}
-					timeZone={timeZone}
-					onOpen={() => onOpen(w.id)}
-				/>
-			))}
-		</section>
+		<Shelf
+			key={group.title}
+			title={group.title}
+			wishes={group.items}
+			timeZone={timeZone}
+			onOpen={onOpen}
+		/>
 	))
 }
 
-function WishTag({
+/** Полка: заголовок и ряд карточек с горизонтальной прокруткой до краёв экрана */
+function Shelf({
+	title,
+	wishes,
+	timeZone,
+	onOpen
+}: {
+	title: string
+	wishes: WishItem[]
+	timeZone: string
+	onOpen: (id: string) => void
+}) {
+	const trackRef = useRef<HTMLDivElement>(null)
+	const [edges, setEdges] = useState({ start: true, end: true })
+	const sorted = [...wishes].sort(byOldest)
+
+	// Можно ли листать дальше — для стрелок; пересчёт при прокрутке и смене ширины
+	const updateEdges = useCallback(() => {
+		const track = trackRef.current
+		if (!track) return
+		const max = track.scrollWidth - track.clientWidth
+		setEdges({ start: track.scrollLeft <= 1, end: track.scrollLeft >= max - 1 })
+	}, [])
+
+	useEffect(() => {
+		const track = trackRef.current
+		if (!track) return
+		updateEdges()
+		const observer = new ResizeObserver(updateEdges)
+		observer.observe(track)
+		return () => observer.disconnect()
+	}, [updateEdges, wishes.length])
+
+	const scrollBy = (dir: 1 | -1) => {
+		const track = trackRef.current
+		track?.scrollBy({ left: dir * track.clientWidth * 0.8, behavior: 'smooth' })
+	}
+
+	const arrow =
+		'flex size-8 items-center justify-center rounded-full glass text-text disabled:opacity-30'
+
+	return (
+		<section className='flex flex-col gap-2.5'>
+			<div className='mx-1 flex items-center justify-between gap-3'>
+				<h2 className='truncate text-[13px] font-medium tracking-wide text-section-title uppercase'>
+					{title}
+				</h2>
+				<div className='flex items-center gap-2'>
+					<span className='text-[13px] text-hint'>{wishes.length}</span>
+					{/* С мышью колесо листает страницу, а не ряд — стрелки только там, где нет пальца */}
+					{!(edges.start && edges.end) && (
+						<div className='hidden gap-1 pointer-fine:flex'>
+							<button
+								aria-label='Листать назад'
+								disabled={edges.start}
+								onClick={() => scrollBy(-1)}
+								className={arrow}
+							>
+								<ChevronIcon className='size-4.5 rotate-180' />
+							</button>
+							<button
+								aria-label='Листать вперёд'
+								disabled={edges.end}
+								onClick={() => scrollBy(1)}
+								className={arrow}
+							>
+								<ChevronIcon className='size-4.5' />
+							</button>
+						</div>
+					)}
+				</div>
+			</div>
+			<div
+				ref={trackRef}
+				onScroll={updateEdges}
+				className='-mx-4 flex snap-x scroll-px-4 gap-2.5 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
+			>
+				{sorted.map(w => (
+					<WishCard
+						key={w.id}
+						wish={w}
+						timeZone={timeZone}
+						onOpen={() => onOpen(w.id)}
+					/>
+				))}
+			</div>
+		</section>
+	)
+}
+
+function WishCard({
 	wish,
 	timeZone,
 	onOpen
@@ -268,68 +380,55 @@ function WishTag({
 	timeZone: string
 	onOpen: () => void
 }) {
-	const subtitle = wish.url ? linkHost(wish.url) : wish.note
-
 	return (
 		<button
 			onClick={onOpen}
-			className='wish-tag glass flex min-h-21 w-full items-stretch overflow-hidden rounded-[18px] text-left'
+			className='flex w-34.5 shrink-0 snap-start flex-col gap-1.5 text-left'
 		>
-			<span className='flex min-w-0 flex-1 items-center gap-3 py-3 pr-3 pl-3.5'>
-				<span
-					aria-hidden='true'
-					className='size-3 shrink-0 rounded-full border-2 border-perforation'
-				/>
-				<span className='flex min-w-0 flex-col gap-0.5'>
-					<span className='line-clamp-2 leading-snug font-semibold wrap-anywhere'>
-						{wish.title}
+			<span className='relative block aspect-square w-full'>
+				{wish.has_photo ? (
+					<WishPhoto
+						wish={wish}
+						className='size-full rounded-[18px] object-cover'
+					/>
+				) : (
+					<span className='glass flex size-full items-center justify-center rounded-[18px] text-hint'>
+						<GiftIcon className='size-8' />
 					</span>
-					{subtitle && (
-						<span className='truncate text-[13px] text-hint'>{subtitle}</span>
-					)}
-				</span>
+				)}
+				<CardBadge wish={wish} timeZone={timeZone} />
+				{wish.reserved_by_me && wish.received_at === null && (
+					<span className='absolute top-1.5 right-1.5 flex size-7 items-center justify-center rounded-full bg-gift text-on-gift'>
+						<LockIcon className='size-3.5' />
+						<span className='sr-only'>Дарите вы</span>
+					</span>
+				)}
 			</span>
-			<WishStub wish={wish} timeZone={timeZone} />
+			<span className='line-clamp-2 px-0.5 text-sm leading-snug font-semibold wrap-anywhere'>
+				{wish.title}
+			</span>
 		</button>
 	)
 }
 
-/** Корешок бирки — состояние желания. Бронь не сбрасывается при получении: так партнёр видит свой подарок */
-function WishStub({ wish, timeZone }: { wish: WishItem; timeZone: string }) {
-	const stub =
-		'flex w-24 shrink-0 flex-col items-center justify-center gap-1 p-2 text-center'
-	const perforated = `${stub} border-l-2 border-dashed border-perforation`
-	const price = wish.price !== null ? formatPrice(wish.price) : null
+/** Плашка на фото: цена, а у исполненного — когда получено. Бронь не сбрасывается при получении: так партнёр видит свой подарок */
+function CardBadge({ wish, timeZone }: { wish: WishItem; timeZone: string }) {
+	const chip =
+		'glass absolute bottom-1.5 left-1.5 flex max-w-[calc(100%-12px)] items-center gap-1 truncate rounded-full px-2 py-1 text-xs'
 
 	if (wish.received_at !== null) {
 		return wish.reserved_by_me ? (
-			<span className={`${perforated} text-gift`}>
-				<HeartIcon className='size-4' />
-				<span className='text-xs font-semibold'>Вы подарили</span>
+			<span className={`${chip} font-semibold text-gift`}>
+				<HeartIcon className='size-3.5 shrink-0' />
+				Вы подарили
 			</span>
 		) : (
-			<span className={`${perforated} text-hint`}>
-				<span className='text-xs'>Получено</span>
-				<span className='text-[13px] leading-tight font-semibold'>
-					{formatShortDay(wish.received_at, timeZone)}
-				</span>
+			<span className={`${chip} font-medium`}>
+				{formatShortDay(wish.received_at, timeZone)}
 			</span>
 		)
 	}
-	if (wish.reserved_by_me) {
-		return (
-			<span className={`${stub} bg-gift text-on-gift`}>
-				<LockIcon className='size-4' />
-				<span className='text-xs font-semibold'>Дарите вы</span>
-				{price && <span className='text-xs'>{price}</span>}
-			</span>
-		)
-	}
-	return price ? (
-		<span className={`${perforated} text-[15px] font-bold`}>{price}</span>
-	) : (
-		<span className={`${perforated} text-[13px] leading-tight text-hint`}>
-			Цена не указана
-		</span>
-	)
+	return wish.price !== null ? (
+		<span className={`${chip} font-bold`}>{formatPrice(wish.price)}</span>
+	) : null
 }

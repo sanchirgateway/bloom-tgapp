@@ -72,24 +72,6 @@
 	backdrop-filter: blur(20px) saturate(1.4);
 }
 
-/* Бирка вишлиста: вырезы сверху и снизу на линии перфорации, перед корешком шириной w-24 */
-@utility wish-tag {
-	--notch: radial-gradient(
-		circle 7px at calc(100% - 6rem) 0,
-		transparent 6.5px,
-		#000 7px
-	);
-	--notch-end: radial-gradient(
-		circle 7px at calc(100% - 6rem) 100%,
-		transparent 6.5px,
-		#000 7px
-	);
-	-webkit-mask: var(--notch), var(--notch-end);
-	-webkit-mask-composite: source-in;
-	mask: var(--notch), var(--notch-end);
-	mask-composite: intersect;
-}
-
 /* Большая бирка в карточке: вырезы слева и справа над полосой высотой h-18 */
 @utility wish-ticket {
 	--notch: radial-gradient(

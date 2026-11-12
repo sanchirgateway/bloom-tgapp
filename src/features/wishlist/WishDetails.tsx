@@ -10,11 +10,13 @@ import {
 	PencilIcon,
 	TrashIcon
 } from '../../shared/ui/icons'
+import { Gallery } from '../../shared/ui/Gallery'
 import { EmptyState, Section, SkeletonRows } from '../../shared/ui/Section'
 import { formatPrice, formatShortDay } from '../flowers/format'
 import { useMe, usePartnerName } from '../user/api'
 import { useDeleteWish, useReceiveWish, useReserveWish, useWish } from './api'
 import { linkHost } from './format'
+import { WishPhoto } from './WishPhoto'
 
 const haptic = {
 	onSuccess: () => hapticFeedback.notificationOccurred.ifAvailable('success'),
@@ -35,6 +37,7 @@ export function WishDetails({
 	const { data: wish, isPending, error } = useWish(id)
 	const receive = useReceiveWish()
 	const reserve = useReserveWish()
+	const [galleryOpen, setGalleryOpen] = useState(false)
 
 	if (error) {
 		return (
@@ -87,11 +90,27 @@ export function WishDetails({
 	return (
 		<div className='flex flex-col gap-4 p-4'>
 			<section className='wish-ticket glass mt-2 flex flex-col overflow-hidden rounded-3xl'>
-				<div className='flex flex-col items-center gap-3 px-5 pt-6 pb-5 text-center'>
-					<span
-						aria-hidden='true'
-						className='size-4.5 rounded-full border-3 border-perforation'
-					/>
+				{wish.has_photo && (
+					<button
+						aria-label='Открыть фото'
+						onClick={() => setGalleryOpen(true)}
+						className='px-4 pt-4'
+					>
+						<WishPhoto
+							wish={wish}
+							className='aspect-4/3 w-full rounded-2xl object-cover'
+						/>
+					</button>
+				)}
+				<div
+					className={`flex flex-col items-center gap-3 px-5 pb-5 text-center ${wish.has_photo ? 'pt-4' : 'pt-6'}`}
+				>
+					{!wish.has_photo && (
+						<span
+							aria-hidden='true'
+							className='size-4.5 rounded-full border-3 border-perforation'
+						/>
+					)}
 					<h1 className='text-[26px] leading-tight font-bold wrap-anywhere'>
 						{wish.title}
 					</h1>
@@ -175,6 +194,18 @@ export function WishDetails({
 			)}
 
 			<BottomButtons main={main} secondary={secondary} />
+
+			{galleryOpen && wish.has_photo && (
+				<Gallery
+					photos={[wish]}
+					start={0}
+					title={wish.title}
+					renderPhoto={(w, className) => (
+						<WishPhoto wish={w} className={className} />
+					)}
+					onClose={() => setGalleryOpen(false)}
+				/>
+			)}
 		</div>
 	)
 }
