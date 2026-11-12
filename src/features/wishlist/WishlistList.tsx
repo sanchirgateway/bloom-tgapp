@@ -385,14 +385,15 @@ function WishCard({
 			onClick={onOpen}
 			className='flex w-34.5 shrink-0 snap-start flex-col gap-1.5 text-left'
 		>
+			{/* Фото — absolute: в потоке вертикальное фото растягивало бы квадрат (min-height: auto у aspect-ratio) */}
 			<span className='relative block aspect-square w-full'>
 				{wish.has_photo ? (
 					<WishPhoto
 						wish={wish}
-						className='size-full rounded-[18px] object-cover'
+						className='absolute inset-0 size-full rounded-[18px] object-cover'
 					/>
 				) : (
-					<span className='glass flex size-full items-center justify-center rounded-[18px] text-hint'>
+					<span className='glass absolute inset-0 flex items-center justify-center rounded-[18px] text-hint'>
 						<GiftIcon className='size-8' />
 					</span>
 				)}
